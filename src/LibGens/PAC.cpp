@@ -32,42 +32,42 @@ namespace LibGens {
 
 		File file(filename, LIBGENS_FILE_READ_BINARY);
 		if (file.valid()) {
-			string signature="";
-			size_t file_size=0;
-			size_t unknown_1=0;
-			
+			string signature = "";
+			size_t file_size = 0;
+			size_t unknown_1 = 0;
+
 
 			file.readString(&signature, 8);
-			file.readInt32(&file_size);
-			file.readInt32(&unknown_1);
-			
+			file.readInt32BE(&file_size);
+			file.readInt32BE(&unknown_1);
 
-			string data_header="";
+
+			string data_header = "";
 			size_t data_size = 0;
 			file.readString(&data_header, 4);
-			file.readInt32(&data_size);
+			file.readInt32BE(&data_size);
 
-			unsigned int file_data_size=0;
-			unsigned int extension_table_size=0;
-			unsigned int string_offset_table_size=0;
-			unsigned int string_table_data_size=0;
-			unsigned int offset_table_size=0;
-			unsigned int data_flag=0;
+			unsigned int file_data_size = 0;
+			unsigned int extension_table_size = 0;
+			unsigned int string_offset_table_size = 0;
+			unsigned int string_table_data_size = 0;
+			unsigned int offset_table_size = 0;
+			unsigned int data_flag = 0;
 
-			file.readInt32(&file_data_size);
-			file.readInt32(&extension_table_size);
-			file.readInt32(&string_offset_table_size);
-			file.readInt32(&string_table_data_size);
-			file.readInt32(&offset_table_size);
-			file.readInt32(&data_flag);
+			file.readInt32BE(&file_data_size);
+			file.readInt32BE(&extension_table_size);
+			file.readInt32BE(&string_offset_table_size);
+			file.readInt32BE(&string_table_data_size);
+			file.readInt32BE(&offset_table_size);
+			file.readInt32BE(&data_flag);
 
 			size_t file_extensions = 0;
 			size_t file_extensions_table_address = 0;
-			file.readInt32(&file_extensions);
-			file.readInt32(&file_extensions_table_address);
+			file.readInt32BE(&file_extensions);
+			file.readInt32BE(&file_extensions_table_address);
 
-			for (size_t i=0; i<file_extensions; i++) {
-				file.goToAddress(file_extensions_table_address + i*8);
+			for (size_t i = 0; i<file_extensions; i++) {
+				file.goToAddress(file_extensions_table_address + i * 8);
 
 				PacExtension *extension = new PacExtension();
 				extension->read(&file);
@@ -76,13 +76,13 @@ namespace LibGens {
 
 			// Read string data table section
 			if (string_offset_table_size) {
-				unsigned int string_data_table_count=0;
-				unsigned int string_data_table_offset=0;
-				file.readInt32(&string_data_table_count);
-				file.readInt32(&string_data_table_offset);
+				unsigned int string_data_table_count = 0;
+				unsigned int string_data_table_offset = 0;
+				file.readInt32BE(&string_data_table_count);
+				file.readInt32BE(&string_data_table_offset);
 
-				for (size_t i=0; i<string_data_table_count; i++) {
-					file.goToAddress(string_data_table_offset + i*12);
+				for (size_t i = 0; i<string_data_table_count; i++) {
+					file.goToAddress(string_data_table_offset + i * 12);
 
 					PacProxyEntry *proxy_entry = new PacProxyEntry();
 					proxy_entry->read(&file);
@@ -90,7 +90,7 @@ namespace LibGens {
 				}
 			}
 
-			file.goToAddress(48+file_data_size+extension_table_size+string_offset_table_size+string_table_data_size);
+			file.goToAddress(48 + file_data_size + extension_table_size + string_offset_table_size + string_table_data_size);
 			if (offset_table_size) {
 				file.readAddressTableBBIN(offset_table_size);
 			}
@@ -111,7 +111,7 @@ namespace LibGens {
 			file->goToAddress(address);
 
 			PacMetaString meta_string;
-			file->readInt32(&meta_string.address);
+			file->readInt32BE(&meta_string.address);
 			file->goToAddress(meta_string.address);
 			meta_string.relative_address = address - lower_limit;
 			meta_string.name = "";
@@ -133,8 +133,8 @@ namespace LibGens {
 	}
 
 	bool PacExtension::scanForAddress(size_t address, File *file) {
-		for (size_t i=0; i<files.size(); i++) {
-			bool result=files[i]->scanForAddress(address, file);
+		for (size_t i = 0; i<files.size(); i++) {
+			bool result = files[i]->scanForAddress(address, file);
 			if (result) return true;
 		}
 
@@ -144,9 +144,9 @@ namespace LibGens {
 
 	void PacPack::scanForAddressesInsideFiles(File *file) {
 		list<size_t> address_table = file->getAddressTable();
-		for (list<size_t>::iterator it=address_table.begin(); it!=address_table.end(); it++) {
-			for (size_t i=0; i<extensions.size(); i++) {
-				bool result=extensions[i]->scanForAddress(*it, file);
+		for (list<size_t>::iterator it = address_table.begin(); it != address_table.end(); it++) {
+			for (size_t i = 0; i<extensions.size(); i++) {
+				bool result = extensions[i]->scanForAddress(*it, file);
 				if (result) break;
 			}
 		}
@@ -154,12 +154,12 @@ namespace LibGens {
 
 
 	void PacProxyEntry::read(File *file) {
-		unsigned int string_data_extension_offset=0;
-		unsigned int string_data_filename_offset=0;
+		unsigned int string_data_extension_offset = 0;
+		unsigned int string_data_filename_offset = 0;
 
-		file->readInt32(&string_data_extension_offset);
-		file->readInt32(&string_data_filename_offset);
-		file->readInt32(&index);
+		file->readInt32BE(&string_data_extension_offset);
+		file->readInt32BE(&string_data_filename_offset);
+		file->readInt32BE(&index);
 		file->goToAddress(string_data_extension_offset);
 		file->readString(&extension);
 		file->goToAddress(string_data_filename_offset);
@@ -167,10 +167,10 @@ namespace LibGens {
 	}
 
 	void PacExtension::read(File *file) {
-		size_t file_extension_string_address=0;
-		size_t file_table_address=0;
-		file->readInt32(&file_extension_string_address);
-		file->readInt32(&file_table_address);
+		size_t file_extension_string_address = 0;
+		size_t file_table_address = 0;
+		file->readInt32BE(&file_extension_string_address);
+		file->readInt32BE(&file_table_address);
 		file->goToAddress(file_extension_string_address);
 		file->readString(&name);
 
@@ -178,15 +178,17 @@ namespace LibGens {
 
 		size_t file_count = 0;
 		size_t file_sub_table_address = 0;
-		file->readInt32(&file_count);
-		file->readInt32(&file_sub_table_address);
+		file->readInt32BE(&file_count);
+		file->readInt32BE(&file_sub_table_address);
 
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "-----------------------------------", name.c_str());
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "FILE EXTENSION: %s", name.c_str());
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "-----------------------------------", name.c_str());
+		/*
+		printfErrorMessageNoFlush(LOG, "-----------------------------------", name.c_str());
+		printfErrorMessageNoFlush(LOG, "FILE EXTENSION: %s", name.c_str());
+		printfErrorMessageNoFlush(LOG, "-----------------------------------", name.c_str());
+		*/
 
-		for (size_t i=0; i<file_count; i++) {
-			file->goToAddress(file_sub_table_address + i*8);
+		for (size_t i = 0; i<file_count; i++) {
+			file->goToAddress(file_sub_table_address + i * 8);
 
 			PacFile *pac_file = new PacFile();
 			pac_file->read(file);
@@ -242,10 +244,6 @@ namespace LibGens {
 		meta_pac_extra_strings.clear();
 	}
 
-	PacFile::~PacFile() {
-		free(data);
-	}
-
 	PacFile::PacFile(string filename) {
 		file_data_address = 0;
 
@@ -255,14 +253,14 @@ namespace LibGens {
 
 			// Read entire file into data buffer
 			data_size = file.getFileSize();
-			data = (unsigned char *) malloc(data_size);
+			data = (unsigned char *)malloc(data_size);
 			file.read(data, data_size);
 
 			// Search data buffer for comparison string
 			size_t metadata_address = 0;
 			char comp_string[] = LIBGENS_PAC_METAINFO_HEADER;
-			for (size_t i=0; i<data_size-16; i++) {
-				if (!strncmp((char *) data + i, comp_string, strlen(comp_string))) {
+			for (size_t i = 0; i<data_size - 16; i++) {
+				if (!strncmp((char *)data + i, comp_string, strlen(comp_string))) {
 					metadata_address = i;
 					break;
 				}
@@ -274,7 +272,7 @@ namespace LibGens {
 			// string meta table.
 
 			if (metadata_address) {
-				data = (unsigned char *) realloc(data, metadata_address);
+				data = (unsigned char *)realloc(data, metadata_address);
 				data_size = metadata_address;
 
 				file.goToAddress(metadata_address);
@@ -282,23 +280,23 @@ namespace LibGens {
 				file.fixPaddingRead(4);
 
 				unsigned int meta_pac_count = 0;
-				file.readInt32(&meta_pac_count);
+				file.readInt32BE(&meta_pac_count);
 
 				// Read Pac Metadata
-				for (size_t i=0; i<meta_pac_count; i++) {
+				for (size_t i = 0; i<meta_pac_count; i++) {
 					PacMetaString pac_meta_string;
 
 					unsigned int meta_pac_address = 0;
-					file.readInt32(&meta_pac_address);
+					file.readInt32BE(&meta_pac_address);
 					pac_meta_string.name = "";
 					pac_meta_string.relative_address = meta_pac_address;
 					meta_pac_extra_strings.push_back(pac_meta_string);
 				}
 
 				// Detect if Pac Metadata points to either strings or other binary data
-				for (size_t i=0; i<meta_pac_count; i++) {
+				for (size_t i = 0; i<meta_pac_count; i++) {
 					file.goToAddress(meta_pac_extra_strings[i].relative_address);
-					file.readInt32(&meta_pac_extra_strings[i].address);
+					file.readInt32BE(&meta_pac_extra_strings[i].address);
 
 					// If it points to the PAC Metadata, it's a string
 					if (meta_pac_extra_strings[i].address >= metadata_address) {
@@ -322,12 +320,13 @@ namespace LibGens {
 	PacFile::PacFile(vector<string> pac_names) {
 		name = "";
 		data_size = 8 + pac_names.size() * 4;
-		data = (unsigned char *) malloc(data_size);
+		data = (unsigned char *)malloc(data_size);
 		memset(data, 0, data_size);
 		file_data_address = 0;
 
 		unsigned int *count = (unsigned int *)(data + 4);
 		*count = pac_names.size();
+		Endian::swap(*count);
 
 		PacMetaString base_offset;
 		base_offset.address = 8;
@@ -335,10 +334,10 @@ namespace LibGens {
 		base_offset.name = "";
 		meta_pac_extra_strings.push_back(base_offset);
 
-		for (size_t i=0; i<pac_names.size(); i++) {
+		for (size_t i = 0; i<pac_names.size(); i++) {
 			PacMetaString name_offset;
 			name_offset.address = 0;
-			name_offset.relative_address = 8 + i*4;
+			name_offset.relative_address = 8 + i * 4;
 			name_offset.name = pac_names[i];
 			meta_pac_extra_strings.push_back(name_offset);
 		}
@@ -346,25 +345,23 @@ namespace LibGens {
 
 
 	void PacFile::read(File *file) {
-		size_t file_name_string_address=0;
+		size_t file_name_string_address = 0;
 
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "0x%x Header", file->getCurrentAddress());
-
-		file->readInt32(&file_name_string_address);
-		file->readInt32(&file_data_address);
+		file->readInt32BE(&file_name_string_address);
+		file->readInt32BE(&file_data_address);
 
 		file->goToAddress(file_name_string_address);
 		file->readString(&name);
 
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "0x%x: %s", file_data_address, name.c_str());
+		//printfErrorMessageNoFlush(LOG, "0x%x: %s", file_data_address, name.c_str());
 
 		file->goToAddress(file_data_address);
-		size_t empty_flag=0;
-		file->readInt32(&data_size);
+		size_t empty_flag = 0;
+		file->readInt32BE(&data_size);
 		file->moveAddress(8);
-		file->readInt32(&empty_flag);
+		file->readInt32BE(&empty_flag);
 
-		if (empty_flag == 0x80) {
+		if (empty_flag == 0x80000000) {
 			data = NULL;
 			return;
 		}
@@ -375,13 +372,13 @@ namespace LibGens {
 		size_t lower_limit = file_data_address + 16;
 		size_t upper_limit = lower_limit + data_size;
 
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "Lower Limit: %d Upper Limit: %d Name: %s", lower_limit, upper_limit, name.c_str());
+		//printfErrorMessage(LOG, "Lower Limit: %d Upper Limit: %d Name: %s", lower_limit, upper_limit, name.c_str());
 	}
 
 	vector<string> PacFile::getPacDependNames() {
 		vector<string> names;
 
-		for (size_t i=0; i<meta_pac_extra_strings.size(); i++) {
+		for (size_t i = 0; i<meta_pac_extra_strings.size(); i++) {
 			if (meta_pac_extra_strings[i].name.size()) {
 				names.push_back(meta_pac_extra_strings[i].name);
 			}
@@ -407,13 +404,13 @@ namespace LibGens {
 			file.fixPadding(4);
 
 			unsigned int meta_pac_count = meta_pac_extra_strings.size();
-			file.writeInt32(&meta_pac_count);
+			file.writeInt32BE(&meta_pac_count);
 
-			for (size_t i=0; i<meta_pac_count; i++) {
-				file.writeInt32(&meta_pac_extra_strings[i].relative_address);
+			for (size_t i = 0; i<meta_pac_count; i++) {
+				file.writeInt32BE(&meta_pac_extra_strings[i].relative_address);
 			}
 
-			for (size_t i=0; i<meta_pac_count; i++) {
+			for (size_t i = 0; i<meta_pac_count; i++) {
 				// Fix address to string's location in the file
 				if (meta_pac_extra_strings[i].name.size()) {
 					meta_pac_extra_strings[i].address = file.getCurrentAddress();
@@ -421,7 +418,7 @@ namespace LibGens {
 				}
 
 				file.goToAddress(meta_pac_extra_strings[i].relative_address);
-				file.writeInt32(&meta_pac_extra_strings[i].address);
+				file.writeInt32BE(&meta_pac_extra_strings[i].address);
 
 				file.goToEnd();
 			}
@@ -447,12 +444,6 @@ namespace LibGens {
 		name = "";
 	}
 
-	PacExtension::~PacExtension() {
-		for (size_t i=0; i<files.size(); i++) {
-			delete files[i];
-		}
-	}
-
 	void PacExtension::setName(string v) {
 		name = v;
 	}
@@ -468,7 +459,7 @@ namespace LibGens {
 
 	size_t PacExtension::getInternalSize() {
 		size_t internal_size = 0;
-		for (size_t i=0; i<files.size(); i++) {
+		for (size_t i = 0; i<files.size(); i++) {
 			internal_size += files[i]->getDataSize();
 		}
 		return internal_size;
@@ -482,42 +473,38 @@ namespace LibGens {
 		return (files.size() == 0);
 	}
 
-	void PacExtension::extract(string folder, bool convert_textures, void (*callback)(string)) {
+	void PacExtension::extract(string folder, bool convert_textures) {
 		// Don't extract depend files
 		if (name == LIBGENS_PAC_EXTENSION_PAC_DEPEND_FULL) {
 			return;
 		}
 
 		string file_extension = name;
-		size_t double_dots=file_extension.find_first_of(":");
-		if (double_dots!=string::npos) {
+		size_t double_dots = file_extension.find_first_of(":");
+		if (double_dots != string::npos) {
 			file_extension.resize(double_dots);
 		}
 
-		for (size_t i=0; i<files.size(); i++) {
+		for (size_t i = 0; i<files.size(); i++) {
 			string new_filename = folder + files[i]->getName() + "." + file_extension;
 
 			if (convert_textures && (file_extension == "dds")) {
-				string temp_filename="temp-tex.gtx";
+				string temp_filename = "temp-tex.gtx";
 				files[i]->save(temp_filename);
 
-				string command="texconv2 -i " + temp_filename + " -o \"" + new_filename + "\"";
+				string command = "texconv2 -i " + temp_filename + " -o \"" + new_filename + "\"";
 				system(command.c_str());
 			}
 			else {
-				if (callback) {
-					(*callback)(files[i]->getName());
-				}
-
 				files[i]->save(new_filename);
 			}
 		}
 	}
 
 
-	void PacPack::extract(string folder, bool convert_textures, void (*callback)(string)) {
-		for (size_t i=0; i<extensions.size(); i++) {
-			extensions[i]->extract(folder, convert_textures, callback);
+	void PacPack::extract(string folder, bool convert_textures) {
+		for (size_t i = 0; i<extensions.size(); i++) {
+			extensions[i]->extract(folder, convert_textures);
 		}
 	}
 
@@ -533,7 +520,7 @@ namespace LibGens {
 	}
 
 	PacExtension *PacPack::getExtensionFull(string ext) {
-		for (size_t i=0; i<extensions.size(); i++) {
+		for (size_t i = 0; i<extensions.size(); i++) {
 			if (extensions[i]->getName() == ext) {
 				return extensions[i];
 			}
@@ -551,7 +538,7 @@ namespace LibGens {
 			return;
 		}
 
-		for (size_t i=0; i<extensions.size(); i++) {
+		for (size_t i = 0; i<extensions.size(); i++) {
 			if (extensions[i]->getName() == ext) {
 				delete extensions[i];
 				extensions.erase(extensions.begin() + i);
@@ -560,7 +547,7 @@ namespace LibGens {
 		}
 	}
 
-	
+
 	void PacPack::createExtensions() {
 		getExtension(LIBGENS_PAC_EXTENSION_ANM);
 		getExtension(LIBGENS_PAC_EXTENSION_LIGHT);
@@ -600,11 +587,11 @@ namespace LibGens {
 	}
 
 	void PacPack::cleanUnusedExtensions() {
-		for (size_t i=0; i<extensions.size(); i++) {
+		for (size_t i = 0; i<extensions.size(); i++) {
 			if (extensions[i]->isEmpty()) {
 				delete extensions[i];
 				extensions.erase(extensions.begin() + i);
-				i-=1;
+				i -= 1;
 			}
 		}
 	}
@@ -717,7 +704,7 @@ namespace LibGens {
 		}
 		else {
 			return "";
-		}  
+		}
 	}
 
 
@@ -735,10 +722,6 @@ namespace LibGens {
 					pac_extension->addFile(pac_file);
 				}
 			}
-			else {
-				printf("Can't process %s\n", filename.c_str());
-				getchar();
-			}
 		}
 	}
 
@@ -747,40 +730,40 @@ namespace LibGens {
 
 		WIN32_FIND_DATA FindFileData;
 		HANDLE hFind;
-		hFind = FindFirstFile((folder+"*.*").c_str(), &FindFileData);
-		if (hFind == INVALID_HANDLE_VALUE) {} 
+		hFind = FindFirstFile((folder + "*.*").c_str(), &FindFileData);
+		if (hFind == INVALID_HANDLE_VALUE) {}
 		else {
 			do {
-				const char *name=FindFileData.cFileName;
-				if (name[0]=='.') continue;
+				const char *name = FindFileData.cFileName;
+				if (name[0] == '.') continue;
 
-				string new_filename=folder+ToString(name);
+				string new_filename = folder + ToString(name);
 				filenames.insert(new_filename);
 			} while (FindNextFile(hFind, &FindFileData) != 0);
 			FindClose(hFind);
 		}
 
-		for(set<string>::iterator it=filenames.begin(); it!=filenames.end(); it++) {
+		for (set<string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
 			addFile(*it);
 		}
 	}
 
 
 	void PacFile::write(File *file, GensStringTable *string_table) {
-		unsigned int empty_flag = (data ? 0 : 0x80);
-		
+		unsigned int empty_flag = (data ? 0 : 0x80000000);
+
 		file_data_address = file->getCurrentAddress();
 
 		// Write Header and Data
-		file->writeInt32(&data_size);
+		file->writeInt32BE(&data_size);
 		file->writeNull(8);
-		file->writeInt32(&empty_flag);
+		file->writeInt32BE(&empty_flag);
 
 		size_t data_address = file->getCurrentAddress();
 		if (data) {
 			file->write(data, data_size);
 			// Fix offsets based on metadata PAC Table
-			for (size_t i=0; i<meta_pac_extra_strings.size(); i++) {
+			for (size_t i = 0; i<meta_pac_extra_strings.size(); i++) {
 				file->goToAddress(meta_pac_extra_strings[i].relative_address + data_address);
 
 				if (meta_pac_extra_strings[i].name.size()) {
@@ -788,15 +771,9 @@ namespace LibGens {
 				}
 				else {
 					size_t new_address = meta_pac_extra_strings[i].address + data_address;
-					file->writeInt32A(&new_address);
+					file->writeInt32BEA(&new_address);
 				}
 			}
-		}
-	}
-
-	void PacFile::hashInput(SHA1Context &sha1_context) {
-		if (data) {
-			SHA1Input(&sha1_context, data, data_size);
 		}
 	}
 
@@ -821,7 +798,7 @@ namespace LibGens {
 	void PacProxyEntry::write(File *file, GensStringTable *string_table) {
 		string_table->writeString(file, extension);
 		string_table->writeString(file, name);
-		file->writeInt32(&index);
+		file->writeInt32BE(&index);
 	}
 
 	void PacExtension::write(File *file, GensStringTable *string_table) {
@@ -830,21 +807,21 @@ namespace LibGens {
 
 		file_address = file->getCurrentAddress();
 
-		//LibGens::Error::printfMessage(LibGens::Error::LOG, "Extension Address: %d", file_address);
+		//printfErrorMessage(LOG, "Extension Address: %d", file_address);
 
 		// Reserve Space for Extensions section
-		file->writeInt32(&files_count);
-		file->writeInt32A(&files_table_address);
+		file->writeInt32BE(&files_count);
+		file->writeInt32BEA(&files_table_address);
 
 		// Write Table
-		for (size_t i=0; i<files_count; i++) {
+		for (size_t i = 0; i<files_count; i++) {
 			string_table->writeString(file, files[i]->getName());
 			file->writeNull(4);
 		}
 	}
 
 	void PacExtension::writeData(File *file, GensStringTable *string_table) {
-		for (size_t i=0; i<files.size(); i++) {
+		for (size_t i = 0; i<files.size(); i++) {
 			file->fixPadding(16);
 			files[i]->write(file, string_table);
 			file->goToEnd();
@@ -852,7 +829,7 @@ namespace LibGens {
 	}
 
 	void PacExtension::proxyFiles() {
-		for (size_t i=0; i<files.size(); i++) {
+		for (size_t i = 0; i<files.size(); i++) {
 			PacFile *original = files[i];
 			PacFile *proxy = new PacFile(original);
 			files[i] = proxy;
@@ -860,7 +837,7 @@ namespace LibGens {
 	}
 
 	void PacExtension::deleteFiles() {
-		for (size_t i=0; i<files.size(); i++) {
+		for (size_t i = 0; i<files.size(); i++) {
 			delete files[i];
 		}
 
@@ -869,53 +846,19 @@ namespace LibGens {
 
 
 	void PacFile::writeFixed(File *file) {
-		file->writeInt32A(&file_data_address);
+		file->writeInt32BEA(&file_data_address);
 	}
 
 	void PacExtension::writeFixed(File *file) {
-		file->writeInt32A(&file_address);
+		file->writeInt32BEA(&file_address);
 
-		for (size_t i=0; i<files.size(); i++) {
-			file->goToAddress(file_address + 12 + i*8);
+		for (size_t i = 0; i<files.size(); i++) {
+			file->goToAddress(file_address + 12 + i * 8);
 			files[i]->writeFixed(file);
 		}
 	}
 
-	void PacExtension::hashInput(SHA1Context &sha1_context) {
-		for (size_t i=0; i<files.size(); i++) {
-			files[i]->hashInput(sha1_context);
-		}
-	}
-
-	list<string> PacExtension::getFileList() {
-		// Get file extension
-		string file_extension = name;
-		size_t double_dots=file_extension.find_first_of(":");
-		if (double_dots != string::npos) {
-			file_extension.resize(double_dots);
-		}
-
-		// Fill file list afterwards
-		list<string> file_list;
-		for (size_t i=0; i < files.size(); i++) {
-			file_list.push_back(files[i]->getName() + "." + file_extension);
-		}
-		return file_list;
-	}
-
-	/** PacPack */
-
 	PacPack::PacPack() {
-	}
-
-	PacPack::~PacPack() {
-		for (size_t i=0; i < extensions.size(); i++) {
-			delete extensions[i];
-		}
-
-		for (size_t i=0; i < proxy_entries.size(); i++) {
-			delete proxy_entries[i];
-		}
 	}
 
 	void PacPack::save(string filename) {
@@ -928,27 +871,27 @@ namespace LibGens {
 
 			// Header Section
 			unsigned int file_size = 0;
-			char header[] = "PACx201L";
+			char header[] = "PACx201B";
 			file.write(header, strlen(header));
 			file.writeNull(4);
 
-			unsigned int unknown_1 = 0x1;
-			file.writeInt32(&unknown_1);
+			unsigned int unknown_1 = 0x10000;
+			file.writeInt32BE(&unknown_1);
 
 			// Data Section
-			unsigned int data_size=0;
-			unsigned int file_data_size=0;
-			unsigned int extension_table_size=0;
-			unsigned int proxy_table_size=0;
-			unsigned int string_table_data_size=0;
-			unsigned int offset_table_size=0;
+			unsigned int data_size = 0;
+			unsigned int file_data_size = 0;
+			unsigned int extension_table_size = 0;
+			unsigned int proxy_table_size = 0;
+			unsigned int string_table_data_size = 0;
+			unsigned int offset_table_size = 0;
 
 			char data_header[] = "DATA";
 			file.write(data_header, strlen(data_header));
 
-			unsigned int data_flag = 0x1;
+			unsigned int data_flag = 0x1000000;
 			file.writeNull(24);
-			file.writeInt32(&data_flag);
+			file.writeInt32BE(&data_flag);
 
 			// Extensions Section
 			size_t extension_section_address = file.getCurrentAddress();
@@ -957,16 +900,16 @@ namespace LibGens {
 				unsigned int extensions_table_address = file.getCurrentAddress() + 8;
 
 				// Reserve Space for Extensions section
-				file.writeInt32(&extensions_count);
-				file.writeInt32A(&extensions_table_address);
+				file.writeInt32BE(&extensions_count);
+				file.writeInt32BEA(&extensions_table_address);
 
-				for (size_t i=0; i<extensions_count; i++) {
+				for (size_t i = 0; i<extensions_count; i++) {
 					string_table.writeString(&file, extensions[i]->getName());
 					file.writeNull(4);
 				}
 
 				// Reserve Space for Extension Sub Tables
-				for (size_t i=0; i<extensions.size(); i++) {
+				for (size_t i = 0; i<extensions.size(); i++) {
 					extensions[i]->write(&file, &string_table);
 				}
 
@@ -976,7 +919,7 @@ namespace LibGens {
 			// Data Section
 			size_t data_section_address = file.getCurrentAddress();
 			{
-				for (size_t i=0; i<extensions.size(); i++) {
+				for (size_t i = 0; i<extensions.size(); i++) {
 					extensions[i]->writeData(&file, &string_table);
 				}
 
@@ -985,8 +928,8 @@ namespace LibGens {
 
 			// Extension Section Fix Offsets
 			{
-				for (size_t i=0; i<extensions.size(); i++) {
-					file.goToAddress(extension_section_address + i*8 + 12);
+				for (size_t i = 0; i<extensions.size(); i++) {
+					file.goToAddress(extension_section_address + i * 8 + 12);
 					extensions[i]->writeFixed(&file);
 				}
 				file.goToEnd();
@@ -995,12 +938,12 @@ namespace LibGens {
 			// Proxy Entries Section
 			size_t proxy_section_address = file.getCurrentAddress();
 			if (proxy_entries.size()) {
-				unsigned int proxy_table_count=proxy_entries.size();
-				unsigned int proxy_table_offset=file.getCurrentAddress() + 8;
-				file.writeInt32(&proxy_table_count);
-				file.writeInt32A(&proxy_table_offset);
+				unsigned int proxy_table_count = proxy_entries.size();
+				unsigned int proxy_table_offset = file.getCurrentAddress() + 8;
+				file.writeInt32BE(&proxy_table_count);
+				file.writeInt32BEA(&proxy_table_offset);
 
-				for (size_t i=0; i<proxy_table_count; i++) {
+				for (size_t i = 0; i<proxy_table_count; i++) {
 					proxy_entries[i]->write(&file, &string_table);
 				}
 
@@ -1013,7 +956,7 @@ namespace LibGens {
 			// String Table Section
 			size_t string_table_section_address = file.getCurrentAddress();
 			{
-				string_table.write(&file, false);
+				string_table.write(&file);
 				file.goToEnd();
 				file.fixPadding(4);
 
@@ -1028,25 +971,23 @@ namespace LibGens {
 				file.fixPadding(4);
 				offset_table_size = file.getCurrentAddress() - offset_table_section_address;
 			}
-			
+
 			// Fix Sizes on header
 			file.goToEnd();
 			file_size = file.getCurrentAddress();
 			file.goToAddress(8);
-			file.writeInt32(&file_size);
+			file.writeInt32BE(&file_size);
 
 
 			file.goToAddress(20);
 			data_size = file_size - 16;
 
-			file.writeInt32(&data_size);
-			file.writeInt32(&file_data_size);
-			file.writeInt32(&extension_table_size);
-			file.writeInt32(&proxy_table_size);
-			file.writeInt32(&string_table_data_size);
-			file.writeInt32(&offset_table_size);
-			
-			file.close();
+			file.writeInt32BE(&data_size);
+			file.writeInt32BE(&file_data_size);
+			file.writeInt32BE(&extension_table_size);
+			file.writeInt32BE(&proxy_table_size);
+			file.writeInt32BE(&string_table_data_size);
+			file.writeInt32BE(&offset_table_size);
 		}
 	}
 
@@ -1068,40 +1009,17 @@ namespace LibGens {
 
 	size_t PacPack::getInternalSize() {
 		size_t internal_size = 0;
-		for (size_t i=0; i<extensions.size(); i++) {
+		for (size_t i = 0; i<extensions.size(); i++) {
 			internal_size += extensions[i]->getInternalSize();
 		}
 
 		return internal_size;
 	}
 
-	void PacPack::hashInput(SHA1Context &sha1_context) {
-		for (size_t i=0; i<extensions.size(); i++) {
-			extensions[i]->hashInput(sha1_context);
-		}
-	}
 
-	list<string> PacPack::getFileList() {
-		list<string> file_list;
-		for (size_t i = 0; i < extensions.size(); i++) {
-			file_list.splice(file_list.end(), extensions[i]->getFileList());
-		}
-		return file_list;
-	}
-
-	/** PacSet */
 
 	PacSet::PacSet() {
 		name = folder = "";
-		for (int i=0; i<5; i++) {
-			sha1_hash[i] = 0;
-		}
-	}
-
-	PacSet::~PacSet() {
-		for (size_t i=0; i<packs.size(); i++) {
-			delete packs[i];
-		}
 	}
 
 	PacSet::PacSet(string filename) {
@@ -1118,33 +1036,18 @@ namespace LibGens {
 
 			if (depend_extension) {
 				vector<PacFile *> depend_files = depend_extension->getFiles();
-				for (size_t i=0; i<depend_files.size(); i++) {
+				for (size_t i = 0; i<depend_files.size(); i++) {
 					openDependFile(depend_files[i]);
 				}
 			}
 		}
-
-		// Generate SHA1 Hash
-		SHA1Reset(&sha1_context);
-		for (size_t i=0; i < packs.size(); i++) {
-			packs[i]->hashInput(sha1_context);
-		}
-		SHA1Result(&sha1_context);
-
-		for (int i=0; i<5; i++) {
-			sha1_hash[i] = sha1_context.Message_Digest[i];
-		}
-	}
-
-	int PacSet::getSHA1Hash(int i) {
-		return sha1_hash[i];
 	}
 
 	void PacSet::openDependFile(PacFile *file) {
 		if (!file) return;
 
 		vector<string> pac_depend_names = file->getPacDependNames();
-		for (size_t i=0; i<pac_depend_names.size(); i++) {
+		for (size_t i = 0; i<pac_depend_names.size(); i++) {
 			string filename = folder + pac_depend_names[i];
 
 			PacPack *depend_pack = new PacPack(filename);
@@ -1177,14 +1080,14 @@ namespace LibGens {
 			// Move any of the special extensions into a secondary file
 			// Proxy anything that is a special extension
 			vector<PacExtension *> extensions = root_pack->getExtensions();
-			for (size_t i=0; i<extensions.size(); i++) {
+			for (size_t i = 0; i<extensions.size(); i++) {
 				if (extensions[i]->isSpecialExtension()) {
 					vector<PacFile *> extension_files = extensions[i]->getFiles();
 					extensions[i]->proxyFiles();
 
 					PacExtension *new_extension = split_pack->getExtensionFull(extensions[i]->getName());
 					if (new_extension) {
-						for (size_t j=0; j<extension_files.size(); j++) {
+						for (size_t j = 0; j<extension_files.size(); j++) {
 							new_extension->addFile(extension_files[j]);
 
 							PacProxyEntry *proxy_entry = new PacProxyEntry();
@@ -1208,7 +1111,7 @@ namespace LibGens {
 			if (extensions.size()) {
 				extension_files = extensions[extension_index]->getFiles();
 			}
-			
+
 			size_t current_size = split_pack->getInternalSize();
 
 			if (current_size < LIBGENS_PAC_SPLIT_BYTES_LIMIT) {
@@ -1218,7 +1121,7 @@ namespace LibGens {
 				size_t next_file_size = 0;
 
 				while (true) {
-					if (!current_split_pack || (current_split_pack->getInternalSize() > (LIBGENS_PAC_SPLIT_BYTES_LIMIT - next_file_size))) {
+					if (!current_split_pack || (current_split_pack->getInternalSize() >(LIBGENS_PAC_SPLIT_BYTES_LIMIT - next_file_size))) {
 						current_split_pack = new PacPack();
 						current_split_pack->createExtensions();
 						packs.push_back(current_split_pack);
@@ -1252,9 +1155,9 @@ namespace LibGens {
 		}
 	}
 
-	void PacSet::extract(string target_folder, bool convert_textures, void (*callback)(string)) {
-		for (size_t i=0; i<packs.size(); i++) {
-			packs[i]->extract(target_folder, convert_textures, callback);
+	void PacSet::extract(string target_folder, bool convert_textures) {
+		for (size_t i = 0; i<packs.size(); i++) {
+			packs[i]->extract(target_folder, convert_textures);
 		}
 	}
 
@@ -1266,9 +1169,9 @@ namespace LibGens {
 		// Save the extra packs
 		vector<string> extra_pack_names;
 
-		for (size_t i=1; i<packs.size(); i++) {
-			char extension[]=".00";
-			sprintf(extension, ".%02d", i-1);
+		for (size_t i = 1; i<packs.size(); i++) {
+			char extension[] = ".00";
+			sprintf(extension, ".%02d", i - 1);
 
 			string save_filename = filename + ToString(extension);
 			packs[i]->save(save_filename);
@@ -1293,14 +1196,5 @@ namespace LibGens {
 		}
 
 		packs[0]->save(filename);
-	}
-
-	list<string> PacSet::getFileList() {
-		// First pack is guaranteed to have all the file entries, even if some of them are proxies
-		if (packs.size()) {
-			return packs[0]->getFileList();
-		}
-
-		return list<string>();
 	}
 };

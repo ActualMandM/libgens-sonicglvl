@@ -304,7 +304,7 @@ namespace LibGens {
 
 			// Strings
 			unsigned int strings_start = file.getCurrentAddress();
-			table.write(&file, false);
+			table.write(&file);
 			file.fixPadding(4);
 
 			// Offset table

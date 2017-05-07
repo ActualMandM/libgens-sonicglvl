@@ -1652,7 +1652,7 @@ namespace LibGens {
 
 		// Write strings
 		file->fixPadding(4);
-		strings.write(file, false);
+		strings.write(file);
 
 		// Write arrays
 		file->fixPadding(4);

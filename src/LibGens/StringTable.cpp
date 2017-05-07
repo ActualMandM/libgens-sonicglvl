@@ -51,7 +51,7 @@ namespace LibGens {
 		strings.push_back(new_string);
 	}
 
-	void GensStringTable::write(File *file, bool big_endian) {
+	void GensStringTable::write(File *file) {
 		for (size_t i=0; i<strings.size(); i++) {
 			size_t address=file->getCurrentAddress();
 			if (strings[i].value.size()) file->writeString(&strings[i].value);
@@ -61,8 +61,7 @@ namespace LibGens {
 
 			for (size_t j=0; j<strings[i].addresses.size(); j++) {
 				file->goToAddress(strings[i].addresses[j]);
-				if (big_endian) file->writeInt32BEA(&address);
-				else file->writeInt32A(&address);
+				file->writeInt32BEA(&address);
 			}
 
 			file->goToEnd();
